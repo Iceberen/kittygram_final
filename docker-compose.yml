@@ -15,10 +15,8 @@ services:
     image: iceberen/kittygram_backend
     env_file: .env
     volumes:
-      - static:/static
-      - media:/app/media
-    depends_on:
-      - db
+      - static:/static/
+      - media:/app/media/
   frontend:
     env_file: .env
     image: iceberen/kittygram_frontend
@@ -32,4 +30,4 @@ services:
       - 9000:80
     volumes:
       - static:/static
-      - media:/app/media
+      - media:/app/media/
