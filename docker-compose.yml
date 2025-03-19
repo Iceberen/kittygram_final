@@ -3,25 +3,32 @@ version: '3'
 volumes:
   pg_data:
   static:
+  uploads:
 
 services:
   db:
     image: postgres:13
     volumes:
       - pg_data:/var/lib/postgresql/data
-  backend:
-    build: ./backend/
     env_file: .env
+  backend:
+    image: iceberen/kittygram_backend
+    env_file: .env
+    volumes:
+      - static:/static
+    depends_on:
+      - db
   frontend:
     env_file: .env
-    build: ./frontend/
+    image: iceberen/kittygram_frontend
     command: cp -r /app/build/. /static/
     volumes:
       - static:/static
   gateway:
-    build: ./nginx/
+    image: iceberen/kittygram_gateway
     env_file: .env
     ports:
       - 9000:80
     volumes:
       - static:/static
+      - uploads:/uploads
