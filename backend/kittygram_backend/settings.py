@@ -18,8 +18,7 @@ SECRET_KEY = 'django-insecure-cg6*%6d51ef8f#4!r3*$vmxm4)abgjw8mo!4y-q*uq1!4$-89$
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['infra-sprint1.zapto.org', 
-                 os.getenv('ALLOWED_HOSTS', 'localhost').split(',')]
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost').split(',')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
