@@ -16,6 +16,7 @@ services:
     env_file: .env
     volumes:
       - static:/static
+      - uploads:/uploads
     depends_on:
       - db
   frontend:
