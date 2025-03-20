@@ -1,26 +1,146 @@
-#  Как работать с репозиторием финального задания
+# Проект «Kittygram»
 
-## Что нужно сделать
+## Описание проекта:
+«Kittygram» соцсеть для обмена фотографиями и достижениями своих питомцев.  
+Зарегистрированные пользователи соцсети могут постить фотографии питомцев,  
+добавлять постам описание, а также смотреть на посты других пользователей.
+#### Развернутый проект:
+[https://infra-sprint1.zapto.org](https://infra-sprint1.zapto.org)
+#### Cостояние рабочего процесса в GitHub:
+![CI Status](https://github.com/Iceberen/kittygram_final/actions/workflows/main.yml/badge.svg)
 
-Настроить запуск проекта Kittygram в контейнерах и CI/CD с помощью GitHub Actions
+# Как запустить проект:
+*Примечание: Все примеры указаны для Linux*
+## Локально
+*Примечание: Для локального запуска проекта используется `docker-compose.yml`*
+### Установка
+- Клонировать репозиторий и перейти в него в командной строке:
+  ```
+  git clone https://github.com/Iceberen/kittygram_final.git
+  cd kittygram_final
+  ```
+- Создать файл `.env` и заполните его своими данными. Все необходимые переменные перечислены в файле `.env.example.`
+### Запуск `Docker compose`
+1. Из корневой папки проекта выполните команду:
+  ```
+  docker compose up 
+  ```
+2. Из корневой папки проекта выполните миграции:
+  ```
+  docker compose exec backend python manage.py migrate 
+  ```
+3. Из корневой папки проекта выполните команды сборки и копирования статики:
+  ```
+  docker compose exec backend python manage.py collectstatic
+  docker compose exec backend cp -r /app/collected_static/. /static/static/
+  ```
 
-## Как проверить работу с помощью автотестов
+## На удаленном сервере
+*Примечание: Для запуска проекта на удаленном сервере используется `docker-compose.production.yml`*
+### Установка
+- Клонировать репозиторий и перейти в него в командной строке:
+  ```
+  git clone https://github.com/Iceberen/kittygram_final.git
+  cd kittygram_final
+  ```
+- Создать файл `.env` и заполните его своими данными. Все необходимые переменные перечислены в файле `.env.example.`
 
-В корне репозитория создайте файл tests.yml со следующим содержимым:
-```yaml
-repo_owner: ваш_логин_на_гитхабе
-kittygram_domain: полная ссылка (https://доменное_имя) на ваш проект Kittygram
-taski_domain: полная ссылка (https://доменное_имя) на ваш проект Taski
-dockerhub_username: ваш_логин_на_докерхабе
-```
+### Создание Docker-образов
+1. Из корневой папки проекта выполните команды из листинга при этом замените `username` на свой логин на `DockerHub`:
+  ```
+  cd frontend
+  docker build -t username/kittygram_frontend .
+  cd ../backend
+  docker build -t username/kittygram_backend .
+  cd ../nginx
+  docker build -t username/kittygram_gateway . 
+  ```
+2. Загрузите образы на `DockerHub`, заменив `username` на свой логин на `DockerHub`:
+  ```
+  docker push username/kittygram_frontend
+  docker push username/kittygram_backend
+  docker push username/kittygram_gateway
+  ```
 
-Скопируйте содержимое файла `.github/workflows/main.yml` в файл `kittygram_workflow.yml` в корневой директории проекта.
+### Деплой на сервере
+1. Подключитесь к удаленному серверу:
+  ```
+  ssh -i "путь_до_ключа_SSH"/"имя_файла_ключа_SSH" username@IP_adress_server
+  ```
+2. Создайте на сервере директорию `kittygram`:
+  ```
+  mkdir kittygram
+  ```
+3. Установите `Docker Compose` на сервер:
+  ```
+  sudo apt update
+  sudo apt install curl
+  curl -fsSL https://get.docker.com -o get-docker.sh
+  sudo sh get-docker.sh
+  sudo apt install docker-compose
+  ```
+4. Скопируйте файлы `docker-compose.production.yml` и `.env` в директорию `kittygram/` на сервере:
+  ```
+  scp -i "путь_до_ключа_SSH"/"имя_файла_ключа_SSH" docker-compose.production.yml /  
+  username@IP_adress_server:/home/username/kittygram/docker-compose.production.yml
+  ```
+  и
+  ```
+  scp -i "путь_до_ключа_SSH"/"имя_файла_ключа_SSH" .env /  
+  username@IP_adress_server:/home/username/kittygram/.env
+  ```
+5. Запустите `Docker Compose` в режиме демона:
+  ```
+  sudo docker-compose -f /home/username/kittygram/docker-compose.production.yml up -d
+  ```
+6. Выполните миграции, соберите статические файлы бэкенда и скопируйте их в `/static/static/`:
+  ```
+  sudo docker-compose -f /home/username/kittygram/docker-compose.production.yml exec backend python manage.py migrate
+  sudo docker-compose -f /home/username/kittygram/docker-compose.production.yml exec backend python manage.py collectstatic
+  sudo docker-compose -f /home/username/kittygram/docker-compose.production.yml exec backend cp -r /app/collected_static/. /static/static/
+  ```
+7. Откройте конфигурационный файл `Nginx` в редакторе `nano`:
+  ```
+  sudo nano /etc/nginx/sites-enabled/default
+  ```
+8. Измените настройки `location` в секции `server`:
+  ```
+  location / {
+    proxy_set_header Host $http_host;
+    proxy_pass http://127.0.0.1:9000;
+  }
+  ```
+9. Проверьте правильность конфигурации `Nginx`:
+  ```
+  sudo nginx -t
+  ```
+10. Перезапустите `Nginx`:
+  ```
+  sudo service nginx reload
+  ```
 
-Для локального запуска тестов создайте виртуальное окружение, установите в него зависимости из backend/requirements.txt и запустите в корневой директории проекта `pytest`.
+## Настройка CI/CD
+1. Файл `workflow` уже написан и находится в директории:
+  ```
+  /.github/workflows/main.yml
+  ```
+2. Добавьте секреты в GitHub Actions:
+  ```
+  DOCKER_USERNAME                # имя пользователя в DockerHub
+  DOCKER_PASSWORD                # пароль пользователя в DockerHub
+  HOST                           # IP-адрес сервера
+  USER                           # имя пользователя
+  SSH_KEY                        # содержимое приватного SSH-ключа
+  SSH_PASSPHRASE                 # пароль для SSH-ключа
+  TELEGRAM_TO                    # ID вашего телеграм-аккаунта
+  TELEGRAM_TOKEN                 # токен вашего бота
+  ```
 
-## Чек-лист для проверки перед отправкой задания
+## Технологии
+- Python
+- Django
+- DjangoRestFramework
+- PostgreSQL
 
-- Проект Taski доступен по доменному имени, указанному в `tests.yml`.
-- Проект Kittygram доступен по доменному имени, указанному в `tests.yml`.
-- Пуш в ветку main запускает тестирование и деплой Kittygram, а после успешного деплоя вам приходит сообщение в телеграм.
-- В корне проекта есть файл `kittygram_workflow.yml`.
+## Автор
+[Васильев Вячеслав](https://github.com/Iceberen)
