@@ -1,146 +1,121 @@
-# Проект «Kittygram»
+# 🐾 Kittygram — социальная сеть для любителей котиков
+
+**Kittygram** — это веб-приложение, где пользователи могут публиковать фото своих котов, описывать их и делиться достижениями питомцев.
+Проект создан на **DRF** и развёрнут с помощью **Docker**.
+
+---
 
 ## Описание проекта:
-«Kittygram» соцсеть для обмена фотографиями и достижениями своих питомцев.  
-Зарегистрированные пользователи соцсети могут постить фотографии питомцев,  
-добавлять постам описание, а также смотреть на посты других пользователей.
-#### Развернутый проект:
-[https://infra-sprint1.zapto.org](https://infra-sprint1.zapto.org)
-#### Cостояние рабочего процесса в GitHub:
+«Kittygram» соцсеть для обмена фотографиями и достижениями своих питомцев.
+Зарегистрированные пользователи соцсети могут постить фотографии питомцев,
+добавлять постам описание, а также смотреть посты других пользователей.
+
+---
+
+## 🔗 Развёрнутый проект:
+[https://infra-sprint1.zapto.org](https://infra-sprint1.zapto.org).  
 ![CI Status](https://github.com/Iceberen/kittygram_final/actions/workflows/main.yml/badge.svg)
 
-# Как запустить проект:
-*Примечание: Все примеры указаны для Linux*
-## Локально
-*Примечание: Для локального запуска проекта используется `docker-compose.yml`*
-### Установка
-- Клонировать репозиторий и перейти в него в командной строке:
+---
+
+## 🚀 Технологии
+- Python 3.11
+- Django
+- Django REST Framework
+- PostgreSQL
+- Docker & Docker Compose
+- Nginx
+- CI/CD
+
+---
+
+## ⚙️ Локальный запуск
+1. Клонировать репозиторий и перейти в него в командной строке:
   ```
   git clone https://github.com/Iceberen/kittygram_final.git
   cd kittygram_final
   ```
-- Создать файл `.env` и заполните его своими данными. Все необходимые переменные перечислены в файле `.env.example.`
-### Запуск `Docker compose`
-1. Из корневой папки проекта выполните команду:
+2. Создать и заполнить файл .env. Все необходимые переменные в файле `.env.example`
   ```
-  docker compose up 
+  cp .env.example .env
+  # Откройте .env и укажите свои настройки
   ```
-2. Из корневой папки проекта выполните миграции:
+3. Запустить проект в Docker
   ```
-  docker compose exec backend python manage.py migrate 
+  docker compose up -d --build
   ```
-3. Из корневой папки проекта выполните команды сборки и копирования статики:
+4. Применить миграции и собрать статику
   ```
+  docker compose exec backend python manage.py migrate
   docker compose exec backend python manage.py collectstatic
   docker compose exec backend cp -r /app/collected_static/. /static/static/
   ```
+5. Готово!
+  Приложение будет доступно по адресу:
+  ```
+  http://localhost/
+  ```
 
-## На удаленном сервере
-*Примечание: Для запуска проекта на удаленном сервере используется `docker-compose.production.yml`*
-### Установка
-- Клонировать репозиторий и перейти в него в командной строке:
-  ```
-  git clone https://github.com/Iceberen/kittygram_final.git
-  cd kittygram_final
-  ```
-- Создать файл `.env` и заполните его своими данными. Все необходимые переменные перечислены в файле `.env.example.`
+---
 
-### Создание Docker-образов
-1. Из корневой папки проекта выполните команды из листинга при этом замените `username` на свой логин на `DockerHub`:
+## ☁️ Деплой на сервер
+
+1. Собрать образы:
   ```
-  cd frontend
-  docker build -t username/kittygram_frontend .
-  cd ../backend
-  docker build -t username/kittygram_backend .
-  cd ../nginx
-  docker build -t username/kittygram_gateway . 
+  cd frontend && docker build -t username/kittygram_frontend .
+  cd ../backend && docker build -t username/kittygram_backend .
+  cd ../nginx && docker build -t username/kittygram_gateway .
   ```
-2. Загрузите образы на `DockerHub`, заменив `username` на свой логин на `DockerHub`:
+2. Отправить образы на DockerHub:
   ```
   docker push username/kittygram_frontend
   docker push username/kittygram_backend
   docker push username/kittygram_gateway
   ```
-
-### Деплой на сервере
-1. Подключитесь к удаленному серверу:
+3. Подключиться к серверу и запустить:
   ```
-  ssh -i "путь_до_ключа_SSH"/"имя_файла_ключа_SSH" username@IP_adress_server
-  ```
-2. Создайте на сервере директорию `kittygram`:
-  ```
+  ssh -i ~/.ssh/key username@server_ip
   mkdir kittygram
-  ```
-3. Установите `Docker Compose` на сервер:
-  ```
-  sudo apt update
-  sudo apt install curl
-  curl -fsSL https://get.docker.com -o get-docker.sh
-  sudo sh get-docker.sh
-  sudo apt install docker-compose
-  ```
-4. Скопируйте файлы `docker-compose.production.yml` и `.env` в директорию `kittygram/` на сервере:
-  ```
-  scp -i "путь_до_ключа_SSH"/"имя_файла_ключа_SSH" docker-compose.production.yml /  
-  username@IP_adress_server:/home/username/kittygram/docker-compose.production.yml
-  ```
-  и
-  ```
-  scp -i "путь_до_ключа_SSH"/"имя_файла_ключа_SSH" .env /  
-  username@IP_adress_server:/home/username/kittygram/.env
-  ```
-5. Запустите `Docker Compose` в режиме демона:
-  ```
-  sudo docker-compose -f /home/username/kittygram/docker-compose.production.yml up -d
-  ```
-6. Выполните миграции, соберите статические файлы бэкенда и скопируйте их в `/static/static/`:
-  ```
-  sudo docker-compose -f /home/username/kittygram/docker-compose.production.yml exec backend python manage.py migrate
-  sudo docker-compose -f /home/username/kittygram/docker-compose.production.yml exec backend python manage.py collectstatic
-  sudo docker-compose -f /home/username/kittygram/docker-compose.production.yml exec backend cp -r /app/collected_static/. /static/static/
-  ```
-7. Откройте конфигурационный файл `Nginx` в редакторе `nano`:
-  ```
-  sudo nano /etc/nginx/sites-enabled/default
-  ```
-8. Измените настройки `location` в секции `server`:
-  ```
-  location / {
-    proxy_set_header Host $http_host;
-    proxy_pass http://127.0.0.1:9000;
-  }
-  ```
-9. Проверьте правильность конфигурации `Nginx`:
-  ```
-  sudo nginx -t
-  ```
-10. Перезапустите `Nginx`:
-  ```
-  sudo service nginx reload
+  sudo docker-compose -f kittygram/docker-compose.production.yml up -d
   ```
 
-## Настройка CI/CD
-1. Файл `workflow` уже написан и находится в директории:
+---
+
+## 🤖 CI/CD
+1. Процесс автоматизирован через **GitHub Actions**:
+- Сборка и публикация образов на DockerHub
+- Деплой на удалённый сервер
+- Уведомления в Telegram
+**Секреты в GitHub Actions:**
   ```
-  /.github/workflows/main.yml
-  ```
-2. Добавьте секреты в GitHub Actions:
-  ```
-  DOCKER_USERNAME                # имя пользователя в DockerHub
-  DOCKER_PASSWORD                # пароль пользователя в DockerHub
-  HOST                           # IP-адрес сервера
-  USER                           # имя пользователя
-  SSH_KEY                        # содержимое приватного SSH-ключа
-  SSH_PASSPHRASE                 # пароль для SSH-ключа
-  TELEGRAM_TO                    # ID вашего телеграм-аккаунта
-  TELEGRAM_TOKEN                 # токен вашего бота
+  DOCKER_USERNAME
+  DOCKER_PASSWORD
+  HOST
+  USER
+  SSH_KEY
+  SSH_PASSPHRASE
+  TELEGRAM_TO
+  TELEGRAM_TOKEN
   ```
 
-## Технологии
-- Python
-- Django
-- DjangoRestFramework
-- PostgreSQL
+---
 
-## Автор
-[Васильев Вячеслав](https://github.com/Iceberen)
+## 📂 Структура проекта
+```
+kittygram_final/
+├── backend/         # Django-приложение: модели, API, админка
+├── frontend/        # React-приложение для интерфейса
+├── nginx/           # Конфигурация веб-сервера
+├── tests/           # Автотесты
+├── docker-compose.yml
+├── docker-compose.production.yml
+└── .env.example     # Пример конфигурации окружения
+```
+
+---
+
+## 🧑‍💻 Автор
+
+Разработано: [Iceberen](https://github.com/Iceberen) в рамках учебного спринта по управлению проектом на удаленном сервере.
+
+---
